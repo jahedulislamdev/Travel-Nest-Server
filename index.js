@@ -30,7 +30,7 @@ async function run() {
         await client.connect();
         const spotsCollection = client.db("tester").collection("spots");
 
-        // get request
+        // post request to add a spot
         app.post("/spots", async (req, res) => {
             console.log("hitting the post request");
             // console.log(req.body);
@@ -49,6 +49,47 @@ async function run() {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
             const result = await spotsCollection.findOne(query);
+            res.send(result);
+        });
+        // get  perticular spot by email which user added
+        app.get("/spots/email/:email", async (req, res) => {
+            const email = req.params.email;
+            const query = { userEmail: email };
+            const cursor = spotsCollection.find(query);
+            const result = await cursor.toArray();
+            res.send(result);
+        });
+        // update a spot by id
+        app.put("/update-spot/:id", async (req, res) => {
+            const id = req.params.id;
+            const updatedSpot = req.body;
+            const query = { _id: new ObjectId(id) };
+            const options = { upsert: true };
+            const updatedDoc = {
+                $set: {
+                    spotName: updatedSpot.spotName,
+                    spotImage: updatedSpot.spotImage,
+                    avgCost: updatedSpot.avgCost,
+                    shortDescription: updatedSpot.shortDescription,
+                    location: updatedSpot.location,
+                    travelTime: updatedSpot.travelTime,
+                    visitorPerYear: updatedSpot.visitorPerYear,
+                    duration: updatedSpot.duration,
+                    season: updatedSpot.season,
+                },
+            };
+            const result = await spotsCollection.updateOne(
+                query,
+                updatedDoc,
+                options,
+            );
+            res.send(result);
+        });
+        // delete a spot by id
+        app.delete("/delete-spot/:id", async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await spotsCollection.deleteOne(query);
             res.send(result);
         });
 
